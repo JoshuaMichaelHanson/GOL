@@ -14,7 +14,25 @@ $(document).ready(function () {
     $('#stop').click(() => {
        myBoard.stop();
     });
+
+    // testRxJs();
 });
+
+function testRxJs() {
+    console.log('Teting rxjs');
+    rxjs.of(1, 2, 3)
+        .subscribe(x => {
+                const element = document.createElement('div');
+                element.innerText = 'Data: ' + x;
+                document.body.appendChild(element)
+            },
+            err => { },
+            () => {
+                const element = document.createElement('div');
+                element.innerText = 'All done';
+                document.body.appendChild(element)
+            });
+}
 
 /***
  * Work in Progress WIP
@@ -75,6 +93,7 @@ class LifeBoard {
     initializeCanvas() {
         console.log('init this b!tch!');
         const $mainCanvas = $('#canvasLife');
+        const mainCanvas = document.getElementById('canvasLife');
         console.log($mainCanvas);
         this.canvasOffsetLeft = $mainCanvas[0].offsetLeft;
         console.log('left offset ', this.canvasOffsetLeft);
@@ -85,6 +104,11 @@ class LifeBoard {
         this.mainContext.canvas.width = this.canvasWidth;
         console.log('mc -- ', this.mainContext);
         console.log('Is the size set....?');
+
+        /***
+         * Comment this out for now, future be able to choose single click or draw mode
+         */
+
         $mainCanvas.click((event) => {
             // console.log('Clicking on stuff....');
             // console.log('Event ', event);
@@ -110,6 +134,83 @@ class LifeBoard {
                     this.cellArray[index].drawCell(this.mainContext);
                 }
             });
+        });
+
+
+        this.captureMouseEvents(mainCanvas);
+    }
+
+    captureMouseEvents(canvas) {
+        console.log('Setup Capture');
+
+        // this will capture all mousedown events from the canvas element
+        rxjs.fromEvent(canvas, 'mousedown')
+            .pipe(
+                rxjs.operators.switchMap((e) => {
+                    // after a mouse down, we'll record all mouse moves
+                    return rxjs.fromEvent(canvas, 'mousemove')
+                        .pipe(
+                            // we'll stop (and unsubscribe) once the user releases the mouse
+                            // this will trigger a 'mouseup' event
+                            rxjs.operators.takeUntil(rxjs.fromEvent(canvas, 'mouseup')),
+                            // we'll also stop (and unsubscribe) once the mouse leaves the canvas (mouseleave event)
+                            rxjs.operators.takeUntil(rxjs.fromEvent(canvas, 'mouseleave')),
+                            // pairwise lets us get the previous value to draw a line from
+                            // the previous point to the current point
+                            rxjs.operators.pairwise()
+                        )
+                })
+            )
+            .subscribe((res /*: [MouseEvent, MouseEvent]*/) => {
+
+                console.log('Capture');
+                const rect = canvas.getBoundingClientRect();
+
+                // previous and current position with the offset
+                const prevPos = {
+                    x: res[0].clientX - rect.left,
+                    y: res[0].clientY - rect.top
+                };
+
+                const currentPos = {
+                    x: res[1].clientX - rect.left,
+                    y: res[1].clientY - rect.top
+                };
+
+                console.log('Prev -> ', prevPos, 'current -> ', currentPos);
+                // this method we'll implement soon to do the actual drawing
+                this.drawOnCanvas(currentPos);
+            });
+
+    }
+
+    drawOnCanvas(currentPos) {
+        console.log('Drawing on canvas');
+
+        const x = currentPos.x;
+        const y = currentPos.y;
+        this.cellArray.forEach((element, index) => {
+            // console.log('Looping! ', element, index);
+
+            // console.log('x ', x, ' pointX ', element.cellOrigin.pointX, ' x plus width ', element.cellOrigin.pointX + element.cellWidth);
+            // console.log('y ', y, ' pointY ', element.cellOrigin.pointY, ' y plust height ', element.cellOrigin.pointY + element.cellHeight);
+            if(y > element.cellOrigin.pointY && y < element.cellOrigin.pointY + element.cellHeight &&
+                x > element.cellOrigin.pointX &&  x < element.cellOrigin.pointX + element.cellWidth) {
+                console.log('Found one!', index);
+
+                /***
+                 * For now going to make alive but in future check which type
+                 */
+                /*
+                if(this.cellArray[index].cellStatus === 'dead') {
+                    this.cellArray[index].cellStatus = 'alive';
+                } else {
+                    this.cellArray[index].cellStatus = 'dead';
+                }
+                */
+                this.cellArray[index].cellStatus = 'alive';
+                this.cellArray[index].drawCell(this.mainContext);
+            }
         });
     }
 
