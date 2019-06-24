@@ -14,7 +14,11 @@ $(document).ready(function () {
     $('#stop').click(() => {
        myBoard.stop();
     });
-
+    $('#cellStatus').change( event => {
+        console.log('Change ', event.target.value);
+        myBoard.drawingType = event.target.value;
+        console.log('Why ', myBoard.drawingType);
+    });
     // testRxJs();
 });
 
@@ -88,6 +92,8 @@ class LifeBoard {
         this.canvasOffsetLeft = 0;
         this.canvasOffsetTop = 0;
         this.stopTimer = '';
+        this.wasDrawing = false;
+        this.drawingType = 'alive';
     }
 
     initializeCanvas() {
@@ -131,7 +137,15 @@ class LifeBoard {
                     } else {
                         this.cellArray[index].cellStatus = 'dead';
                     }
-                    this.cellArray[index].drawCell(this.mainContext);
+                    console.log('Drawing? ', this.wasDrawing);
+                    if(this.wasDrawing) {
+                        this.wasDrawing = false;
+                        // dont draw after the click but do draw next time
+                        console.log('Dont draw');
+                    } else {
+                        console.log('Draw');
+                        this.cellArray[index].drawCell(this.mainContext);
+                    }
                 }
             });
         });
@@ -164,6 +178,7 @@ class LifeBoard {
             .subscribe((res /*: [MouseEvent, MouseEvent]*/) => {
 
                 console.log('Capture');
+                this.wasDrawing = true;
                 const rect = canvas.getBoundingClientRect();
 
                 // previous and current position with the offset
@@ -208,7 +223,8 @@ class LifeBoard {
                     this.cellArray[index].cellStatus = 'dead';
                 }
                 */
-                this.cellArray[index].cellStatus = 'alive';
+                console.log('Drawing type ', this.drawingType);
+                this.cellArray[index].cellStatus = this.drawingType;
                 this.cellArray[index].drawCell(this.mainContext);
             }
         });

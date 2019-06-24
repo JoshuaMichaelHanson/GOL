@@ -5,13 +5,17 @@
     <script src="js/jQuery/jquery-3-4-1.js"></script>
     <script src="https://cdnjs.cloudflare.com/ajax/libs/rxjs/6.1.0/rxjs.umd.js"></script>
     <script src="js/gol/GameOfLife.js"></script>
-    <title>High Life</title>
+    <title>Conway</title>
   </head>
   <body>
-    <h1>What up Dogs?</h1>
+    <h1>Welcome to Life</h1>
     <button type="button" id="startButton" name="startButton">Start</button>
     <button type="button" id="nextTick" name="nextTick">Next Tick</button>
     <button type="button" id="stop" name="stop">Stop</button>
+    <select id="cellStatus">
+      <option value="alive">Drawing Alive</option>
+      <option value="dead">Drawing Dead</option>
+    </select>
     <section>
       <canvas id="canvasLife" style="border:1px solid">
       </canvas>
